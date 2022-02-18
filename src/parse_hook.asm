@@ -214,7 +214,3 @@ parse_string:
 ; implicit mul reuses mul
 
 hook_size = $ - _parse_hook
-
-public _parse_hook_size
-_parse_hook_size:
-	dl	hook_size

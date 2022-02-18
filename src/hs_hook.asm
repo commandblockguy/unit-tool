@@ -18,7 +18,3 @@ ix_val:
 	ret
 
 hook_size = $ - _hs_hook
-
-public _hs_hook_size
-_hs_hook_size:
-	dl	hook_size
