@@ -11,11 +11,13 @@ include '../../toolchain/src/include/ti84pceg.inc'
 ; I don't even know how lists are going to work
 
 ; United number format:
-; A complex number with bit 5 of second type set
+; A complex number - real part is coefficient, complex part is units
 ; Mantissa bytes: 4 bit exponents for s, kg, m, A, K, mol, cd, respectively
 ; First mantissa byte is or'd with $f0
 
+section	.text,"ax",@progbits
 public _parse_hook
+
 _parse_hook:
 	db	$83
 ix_val:
@@ -67,15 +69,55 @@ ix_val:
 	pop	hl
 	ld	iy,ti.flags
 
-	push	hl
-	scf
-	sbc	hl,hl
-	ld	(hl),2
-	pop	hl
+; b = operation
+; 	recip:	0c
+; 	square:	0d
+; 	add:	70
+; 	sub: 	71
+;	frac:	81
+; 	mul: 	82
+; 	div: 	83
+;	neg:	b0
+; 	sqrt: 	bc
+;	3root:	bd
+; 	exp: 	f0
+;	root:	f1
+; implicit mul reuses mul
 
-	ld	de,2
-	or	a,a
-	sbc	hl,de
+	;push	hl
+	;scf
+	;sbc	hl,hl
+	;ld	(hl),2
+	;pop	hl
+
+	dec	l
+	jr	nz,multi_arg
+
+single_arg:
+	ld	a,b
+	cp	a,$A6
+	ld	de,handleToString - ix_val
+	jr	z,.call_handler
+	cp	a,$A7
+	ld	de,handleToString - ix_val
+	jr	z,.call_handler
+
+iterate op, Chs, Recip, Sqr, Sqrt, CubRt
+	cp	a,ti.t#op
+	ld	de,handle#op - ix_val
+	jr	z,.call_handler
+end iterate
+
+	jp	ti.ErrDataType
+
+.call_handler:
+	lea	iy,ix
+	add	iy,de
+	call	ti._indcall
+	ret
+
+multi_arg:
+	dec	l
 	jp	nz,ti.ErrDataType
 
 	push	bc
@@ -89,6 +131,11 @@ iterate n, 1, 3
 	and	a,$7f
 	cp	a,ti.CplxObj
 	jr	z,.op#n#_complex
+	or	a,a
+	jr	z,.op#n#_real
+	ld	iy,ti.flags
+	jp	ti.ErrDataType
+.op#n#_real:
 	lea	hl,ix
 	ld	de,.null_type - ix_val
 	add	hl,de
@@ -102,9 +149,10 @@ iterate n, 1, 3
 .op#n#_valid:
 end iterate
 
-; swap OP2 and OP3
+; (coeff2, unit2, coeff1, unit1) -> (coeff1, coeff2, unit2, unit1)
 	call	ti.OP2ToOP5
-	call	ti.OP3ToOP2
+	call	ti.OP1ToOP2
+	call	ti.OP3ToOP1
 	call	ti.OP5ToOP3
 
 	pop	af
@@ -115,6 +163,7 @@ iterate op, Mul, Div, Add, Sub
 	jr	z,.call_handler
 end iterate
 
+	ld	iy,ti.flags
 	jp	ti.ErrDataType
 
 .call_handler:
@@ -147,7 +196,7 @@ handleMul:
 	push	bc
 	call	ti.FPMult
 	pop	af
-	jr	handleTail
+	jr	handle2ArgTail
 
 handleDiv:
 	ld	de,ti.OP4+2
@@ -170,47 +219,154 @@ handleDiv:
 	push	bc
 	call	ti.FPDiv
 	pop	af
-	jr	handleTail
+	jr	handle2ArgTail
 
 handleAdd:
 	ld	iy,ti.flags
-	jp	ti.ErrDataType
+	call	ti.FPAdd
+	jr	checkSameUnits
 
 handleSub:
 	ld	iy,ti.flags
-	jp	ti.ErrDataType
+	call	ti.FPSub
+; fall through to checkSameUnits
 
-handleTail:
-	jr	nc,.dimensionless
+checkSameUnits:
+	ld	hl,ti.OP3 + 2
+	ld	de,ti.OP4 + 2
+	ld	bc,7
+.loop:
+	ld	a,(de)
+	inc	de
+	cpi
+	jp	nz,ti.ErrDataType
+; ugh why can't you jr po
+	ld	a,c
+	or	a,a
+	jr	nz,.loop
+	scf
+; fall through to handle2ArgTail
+
+handle2ArgTail:
+	jr	nc,hookTail
 	ld	a,ti.CplxObj
 	ld	(ti.OP1),a
 	call	ti.OP4ToOP2
-.dimensionless:
-	ld	hl,2
+hookTail:
 	ld	iy,ti.flags
 	res	0,(iy-flag_continue)
 	ld	a,1
 	and	a,a
 	ret
 
+handleChs:
+	call	ti.InvOP1S
+	jr	hookTail
+
+handleRecip:
+	call	ti.PushRealO2
+	call	ti.FPRecip
+	call	ti.PopRealO2
+	ld	a,(ti.OP1)
+	or	a,ti.CplxObj
+	ld	(ti.OP1),a
+	ld	hl,ti.OP2+2
+	ld	b,7
+.loop:
+	ld	a,(hl)
+	neg
+	or	a,$f0
+	ld	(hl),a
+	inc	hl
+	djnz	.loop
+	jr	hookTail
+
+handleSqr:
+	call	ti.PushRealO2
+	call	ti.FPSquare
+	call	ti.PopRealO2
+	ld	a,(ti.OP1)
+	or	a,ti.CplxObj
+	ld	(ti.OP1),a
+	ld	hl,ti.OP2+2
+	ld	b,7
+.loop:
+	ld	a,(hl)
+	sla	a
+	or	a,$f0
+	ld	(hl),a
+	inc	hl
+	djnz	.loop
+hookTailTramp:
+	jr	hookTail
+
+handleSqrt:
+	ld	iy,ti.flags
+	call	ti.PushRealO2
+	call	ti.SqRoot
+	call	ti.PopRealO2
+	ld	a,(ti.OP1)
+	or	a,ti.CplxObj
+	ld	(ti.OP1),a
+	ld	hl,ti.OP2+2
+	ld	b,7
+.loop:
+	ld	a,(hl)
+	ld	d,a
+	and	a,$f8
+	ld	e,a
+	ld	a,d
+	and	a,$0f
+	srl	a
+	jp	c,ti.ErrDataType
+	or	a,e
+	ld	(hl),a
+	inc	hl
+	djnz	.loop
+	jr	hookTailTramp
+
+handleCubRt:
+	jp	ti.ErrDataType
+
+handleToString:
+	ld	bc,format_united-handleToString
+	add	iy,bc
+	call	ti._indcall
+	ex	de,hl
+	ld	de,$D0033A
+	or	a,a
+	sbc	hl,de
+
+	call	ti.CreateTStrng
+	inc	de
+	inc	de
+	ld	hl,$D0033A
+.loop:
+	ld	a,(hl)
+; I'm not sure why MathPrint uses ' ' for space and tokens for everything else.
+; I'm not sure I want to know.
+	cp	a,' '
+	jr	nz,.not_space
+	ld	a,ti.tSpace
+.not_space:
+	ld	(de),a
+	inc	hl
+	inc	de
+	dec	bc
+	ld	a,b
+	or	a,c
+	jr	nz,.loop
+
+	call	ti.OP4ToOP1
+
+	jr	hookTailTramp
+
 ; parses the string in OP1, returns united value in OP1 and OP2 or throws a data type error
 parse_string:
 	ld	iy,ti.flags
 	ret
 
-; b = operation
-; 	recip:	0c
-; 	square:	0d
-; 	add:	70
-; 	sub: 	71
-;	frac:	81
-; 	mul: 	82
-; 	div: 	83
-;	neg:	b0
-; 	sqrt: 	bc
-;	3root:	bd
-; 	exp: 	f0
-;	root:	f1
-; implicit mul reuses mul
-
 hook_size = $ - _parse_hook
+
+extern	_metric_units
+extern	format_united
