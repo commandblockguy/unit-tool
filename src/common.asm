@@ -69,6 +69,8 @@ end macro
 sizeof_unit = 21
 
 public _metric_units
+public num_metric_units
+public sizeof_unit
 _metric_units:
 namespace base_units
 	unit	g,      $10000000000000, -3, kg
@@ -106,6 +108,50 @@ num_metric_units = ($ - _metric_units) / sizeof_unit
 
 si_prefixes:
 	reformat_string	'yzafpnμm kMGTPEZY',17
+
+public	si_prefixes_full
+public	num_prefixes
+si_prefixes_full:
+	reformat_string	'y',1
+	db	-24
+	reformat_string	'z',1
+	db	-21
+	reformat_string	'a',1
+	db	-18
+	reformat_string	'f',1
+	db	-15
+	reformat_string	'p',1
+	db	-12
+	reformat_string	'n',1
+	db	-9
+	reformat_string	'μ',1
+	db	-6
+	reformat_string	'm',1
+	db	-3
+	reformat_string	'c',1
+	db	-2
+	reformat_string	'd',1
+	db	-1
+	; not including deka- since it's two characters and that would break everything
+	reformat_string	'h',1
+	db	2
+	reformat_string	'k',1
+	db	3
+	reformat_string	'M',1
+	db	6
+	reformat_string	'G',1
+	db	9
+	reformat_string	'T',1
+	db	12
+	reformat_string	'P',1
+	db	15
+	reformat_string	'E',1
+	db	18
+	reformat_string	'Z',1
+	db	21
+	reformat_string	'Y',1
+	db	24
+num_prefixes = ($ - si_prefixes_full) / 2
 
 public format_united
 
