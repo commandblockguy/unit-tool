@@ -22,6 +22,34 @@ _parse_hook:
 	db	$83
 ix_val:
 	set	0,(iy-flag_continue)
+	cp	a,3
+	jr	nz,.not_type3
+
+	ld	a,b
+	cp	a,$0f ; Output(
+	ret	nz
+
+; check if this actually a united quantity
+	ld	a,(ti.OP1)
+	and	a,$3f
+	cp	a,ti.CplxObj
+	ret	nz
+	ld	a,(ti.OP2+2)
+	and	a,$f0
+	cp	a,$f0
+	ret	nz
+
+	lea	iy,ix
+	ld	de,handleToString-ix_val
+	add	iy,de
+	push	hl
+	call	ti._indcall
+	pop	hl
+	ld	b,$0f
+	xor	a,a
+	ret
+
+.not_type3:
 	cp	a,1
 	ret	nz
 
