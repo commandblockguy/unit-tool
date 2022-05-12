@@ -127,7 +127,7 @@ ix_val:
 	ld	a,(hl)
 
 .parsed:
-	lea	hl,ix+3
+	lea	hl,ix+unit_name_length
 	call	ti.Mov9OP1OP2
 	ld	hl,ti.OP1+1
 	add	a,(hl)
@@ -471,19 +471,18 @@ handleToString:
 ; hl = pointer to first token
 ; c = size
 ; iy = ptr to self
-; destroys a,bc,de,hl
+; destroys a,bc,de,hl,OP3
 ; returns ix = unit, or c if not found
 parse_unit:
 	lea	ix,iy
-	ld	de,_metric_units-parse_unit
+	ld	de,_metric_units-sizeof_unit-parse_unit
 	add	ix,de
-	push	hl
-	ld	de,0
-	ld	hl,ti.scrapMem
-	ld	(hl),de
+
 	ex	de,hl
-	pop	hl
-	ld	b,3
+	call	ti.ZeroOP3
+	ex	de,hl
+	ld	de,ti.OP3
+	ld	b,unit_name_length
 	inc	c
 .preparse_loop:
 	dec	c
@@ -502,16 +501,27 @@ parse_unit:
 	inc	de
 	djnz	.preparse_loop
 .preparse_done:
+	ld	(hl),0
 
-	ld	de,(ti.scrapMem)
-	ld	b,num_metric_units
+	ld	bc,(num_metric_units+1) shl 8
 .unit_loop:
-	ld	hl,(ix)
-	or	a,a
-	sbc	hl,de
-	ret	z
+	dec	b
+	jr	z,.not_found
 	lea	ix,ix+sizeof_unit
-	djnz	.unit_loop
+	ld	de,ti.OP3
+	lea	hl,ix
+	ld	c,unit_name_length
+.char_loop:
+	ld	a,(de)
+	inc	de
+	cpi
+	jr	nz,.unit_loop
+	ld	a,c
+	or	a,a
+	jr	nz,.char_loop
+	ret
+
+.not_found:
 	scf
 	ret
 
@@ -523,3 +533,4 @@ extern	format_united
 extern	sizeof_unit
 extern	si_prefixes_full
 extern	num_prefixes
+extern	unit_name_length

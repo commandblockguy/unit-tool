@@ -37,7 +37,7 @@ end macro
 
 num_base_units = 0
 macro base_unit name
-	element	base_units.name:num_base_units
+	element	units.name:num_base_units
 	reformat_string	`name, 3
 	num_base_units = num_base_units + 1
 end macro
@@ -52,10 +52,13 @@ base_units:
 	base_unit	mol
 	base_unit	cd
 
+unit_name_length = 5
+public	unit_name_length
+
 macro unit symbol, mantissa, exp, dims
 	local	dims_v
 	dims_v = $f0f0f0f0f0f0f0
-	reformat_string	`symbol, 3
+	reformat_string	`symbol, unit_name_length
 	db	$0c
 	db	$80 + exp
 	db	mantissa bswap 7
@@ -66,13 +69,15 @@ end repeat
 	emit	num_base_units,dims_v
 end macro
 
-sizeof_unit = 21
+sizeof_unit = 18 + unit_name_length
 
+public _units
 public _metric_units
 public num_metric_units
 public sizeof_unit
+_units:
 _metric_units:
-namespace base_units
+namespace units
 	unit	g,      $10000000000000, -3, kg
 	unit	L,      $10000000000000, -3, m*3
 iterate	symbol, m, s, A, K, mol, cd
@@ -105,6 +110,8 @@ end iterate
  	unit	eV,     $16021766340000, -19, kg+2*m-2*s
 end namespace
 num_metric_units = ($ - _metric_units) / sizeof_unit
+
+num_units = ($ - _metric_units) / sizeof_unit
 
 si_prefixes:
 	reformat_string	'yzafpnμm kMGTPEZY',17
@@ -163,14 +170,14 @@ format_united:
 	ld	bc,_metric_units-format_united - sizeof_unit
 	add	ix,bc
 
-	ld	bc,num_metric_units shl 8
+	ld	bc,(num_metric_units+1) shl 8
 
 .metric_loop:
 	dec	b
 	jr	z,.not_named_metric_tramp
 	lea	ix,ix+sizeof_unit
 	ld	de,ti.OP2+2
-	lea	hl,ix+14
+	lea	hl,ix+unit_name_length+11
 	ld	c,7
 .cp_dim_loop:
 	ld	a,(de)
@@ -187,7 +194,7 @@ format_united:
 	ld	iy,ti.flags
 	call	ti.PushOP1
 
-	lea	hl,ix+3
+	lea	hl,ix+unit_name_length
 	call	ti.Mov9ToOP2
 
 	call	ti.FPDiv
@@ -244,7 +251,7 @@ format_united:
 
 	pop	de ; ptr to current end of string
 	pop	bc ; c = SI prefix
-	pop	iy,ix
+	pop	iy,hl
 
 	ld	a,' '
 	ld	(de),a
@@ -267,8 +274,10 @@ format_united:
 
 .no_prefix:
 
-repeat 3
-	ld	a,(ix+%-1)
+	ld	b,unit_name_length
+.metric_copy_name_loop:
+	ld	a,(hl)
+	inc	hl
 	or	a,a
 	jr	z,.metric_name_copied
 	cp	a,$80
@@ -281,7 +290,7 @@ repeat 3
 .metric_uppercase_#%:
 	ld	(de),a
 	inc	de
-end repeat
+	djnz	.metric_copy_name_loop
 .metric_name_copied:
 
 	xor	a,a
