@@ -103,9 +103,6 @@ end iterate
  	unit	Gy,	$10000000000000, 0, 2*m-2*s
  	unit	Sv,	$10000000000000, 0, 2*m-2*s
  	unit	kat,	$10000000000000, 0, -s+mol
- 	unit	h,	$60000000000000, 1, s
- 	unit	d,	$86400000000000, 4, s
- 	unit	au,	$14959787070000, 11, m
  	unit	t,	$10000000000000, 3, kg
  	unit	Da,	$16605390402000, -27, kg
  	unit	eV,	$16021766340000, -19, kg+2*m-2*s
@@ -113,6 +110,11 @@ end namespace
 num_metric_units = ($ - _metric_units) / sizeof_unit
 
 namespace units
+ 	unit	ha,	$10000000000000, 4, m*2
+	unit	min,	$60000000000000, 1, s
+	unit	h,	$36000000000000, 3, s
+ 	unit	d,	$86400000000000, 4, s
+ 	unit	au,	$14959787070000, 11, m
 	unit	in,	$25400000000000, -2, m
 	unit	ft,	$30480000000000, -1, m
 	unit	yd,	$91440000000000, -1, m
