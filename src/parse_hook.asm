@@ -475,7 +475,7 @@ handleToString:
 ; returns ix = unit, or c if not found
 parse_unit:
 	lea	ix,iy
-	ld	de,_metric_units-sizeof_unit-parse_unit
+	ld	de,_units-sizeof_unit-parse_unit
 	add	ix,de
 
 	ex	de,hl
@@ -503,7 +503,7 @@ parse_unit:
 .preparse_done:
 	ld	(hl),0
 
-	ld	bc,(num_metric_units+1) shl 8
+	ld	bc,(num_units+1) shl 8
 .unit_loop:
 	dec	b
 	jr	z,.not_found
@@ -528,7 +528,9 @@ parse_unit:
 hook_size = $ - _parse_hook
 
 extern	_metric_units
+extern	_units
 extern	num_metric_units
+extern	num_units
 extern	format_united
 extern	sizeof_unit
 extern	si_prefixes_full

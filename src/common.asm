@@ -73,44 +73,63 @@ sizeof_unit = 18 + unit_name_length
 
 public _units
 public _metric_units
+public num_units
 public num_metric_units
 public sizeof_unit
 _units:
 _metric_units:
 namespace units
-	unit	g,      $10000000000000, -3, kg
-	unit	L,      $10000000000000, -3, m*3
+	unit	g,	$10000000000000, -3, kg
+	unit	L,	$10000000000000, -3, m*3
 iterate	symbol, m, s, A, K, mol, cd
-	unit	symbol, $10000000000000, 0, symbol
+	unit	symbol,	$10000000000000, 0, symbol
 end iterate
- 	unit	Hz,     $10000000000000, 0, -s
- 	unit	N,      $10000000000000, 0, kg+m-2*s
- 	unit	Pa,     $10000000000000, 0, kg-m-2*s
- 	unit	J,      $10000000000000, 0, kg+2*m-2*s
- 	unit	W,      $10000000000000, 0, kg+2*m-3*s
- 	unit	C,      $10000000000000, 0, s+A
- 	unit	V,      $10000000000000, 0, kg+2*m-3*s-A
- 	unit	F,      $10000000000000, 0, -kg-2*m+4*s+2*A
- 	unit	Ω,      $10000000000000, 0, kg+2*m-3*s-2*A
- 	unit	ohm,    $10000000000000, 0, kg+2*m-3*s-2*A
- 	unit	S,      $10000000000000, 0, -kg-2*m+3*s+2*A
- 	unit	Wb,     $10000000000000, 0, kg+2*m-2*s-A
- 	unit	T,      $10000000000000, 0, kg-2*s-A
- 	unit	H,      $10000000000000, 0, kg+2*m-2*s-2*A
- 	unit	lx,     $10000000000000, 0, cd-2*m
- 	unit	Bq,     $10000000000000, 0, -s
- 	unit	Gy,     $10000000000000, 0, 2*m-2*s
- 	unit	Sv,     $10000000000000, 0, 2*m-2*s
- 	unit	kat,    $10000000000000, 0, -s+mol
- 	unit	h,      $60000000000000, 1, s
- 	unit	d,      $86400000000000, 4, s
- 	unit	au,     $14959787070000, 11, m
- 	unit	t,      $10000000000000, 3, kg
- 	unit	Da,     $16605390402000, -27, kg
- 	unit	eV,     $16021766340000, -19, kg+2*m-2*s
+ 	unit	Hz,	$10000000000000, 0, -s
+ 	unit	N,	$10000000000000, 0, kg+m-2*s
+ 	unit	Pa,	$10000000000000, 0, kg-m-2*s
+ 	unit	J,	$10000000000000, 0, kg+2*m-2*s
+ 	unit	W,	$10000000000000, 0, kg+2*m-3*s
+ 	unit	C,	$10000000000000, 0, s+A
+ 	unit	V,	$10000000000000, 0, kg+2*m-3*s-A
+ 	unit	F,	$10000000000000, 0, -kg-2*m+4*s+2*A
+ 	unit	Ω,	$10000000000000, 0, kg+2*m-3*s-2*A
+ 	unit	ohm,	$10000000000000, 0, kg+2*m-3*s-2*A
+ 	unit	S,	$10000000000000, 0, -kg-2*m+3*s+2*A
+ 	unit	Wb,	$10000000000000, 0, kg+2*m-2*s-A
+ 	unit	T,	$10000000000000, 0, kg-2*s-A
+ 	unit	H,	$10000000000000, 0, kg+2*m-2*s-2*A
+ 	unit	lx,	$10000000000000, 0, cd-2*m
+ 	unit	Bq,	$10000000000000, 0, -s
+ 	unit	Gy,	$10000000000000, 0, 2*m-2*s
+ 	unit	Sv,	$10000000000000, 0, 2*m-2*s
+ 	unit	kat,	$10000000000000, 0, -s+mol
+ 	unit	h,	$60000000000000, 1, s
+ 	unit	d,	$86400000000000, 4, s
+ 	unit	au,	$14959787070000, 11, m
+ 	unit	t,	$10000000000000, 3, kg
+ 	unit	Da,	$16605390402000, -27, kg
+ 	unit	eV,	$16021766340000, -19, kg+2*m-2*s
 end namespace
 num_metric_units = ($ - _metric_units) / sizeof_unit
 
+namespace units
+	unit	in,	$25400000000000, -2, m
+	unit	ft,	$30480000000000, -1, m
+	unit	yd,	$91440000000000, -1, m
+	unit	mi,	$16093440000000, 3, m
+	unit	ly,	$94607304725808, 15, m
+	unit	acre,	$40468564224000, 3, m*2
+	unit	cup,	$23658823650000, -6, m*3
+	unit	gal,	$37854117840000, -3, m*3
+	unit	floz,	$29573529562500, -6, m*3
+	unit	pt,	$47317647300000, -6, m*3
+	unit	qt,	$94635294600000, -6, m*3
+	unit	tbsp,	$14786764781250, -5, m*3
+	unit	tsp,	$49289215937500, -6, m*3
+	unit	oz,	$28349523125000, -2, kg
+	unit	lb,	$45359237000000, -1, kg
+	unit	ton,	$90718474000000, 2, kg
+end namespace
 num_units = ($ - _metric_units) / sizeof_unit
 
 si_prefixes:
