@@ -50,9 +50,9 @@ int main(int argc, const char **argv)
     dbg_printf("Program at %p, running at %p, hooks at %p/%p and %p/%p\n", self, PRGM_ADDR, &parse_hook - PRGM_ADDR + self, &parse_hook, &hs_hook - PRGM_ADDR + self, &hs_hook);
 
     hook_error_t err;
-    err = hook_Install(0x000800, &parse_hook - PRGM_ADDR + self, 0, HOOK_TYPE_PARSER, 5, "Unit manipulation hook");
+    err = hook_Install(0x000900, &parse_hook - PRGM_ADDR + self, 0, HOOK_TYPE_PARSER, 5, "Unit manipulation hook");
     dbg_printf("Err %u installing hook at %p\n", err, &parse_hook - PRGM_ADDR + self);
-    err = hook_Install(0x000801, &hs_hook - PRGM_ADDR + self, 0, HOOK_TYPE_HOMESCREEN, 5, "Unit manipulation hook");
+    err = hook_Install(0x000901, &hs_hook - PRGM_ADDR + self, 0, HOOK_TYPE_HOMESCREEN, 5, "Unit manipulation hook");
     dbg_printf("Err %u installing hook at %p\n", err, &hs_hook - PRGM_ADDR + self);
     hook_Sync();
 
