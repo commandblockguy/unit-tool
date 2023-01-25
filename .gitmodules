@@ -1,0 +1,3 @@
+[submodule "app_tools"]
+	path = app_tools
+	url = git@github.com:commandblockguy/app_tools
