@@ -183,13 +183,11 @@ num_prefixes = ($ - si_prefixes_full) / 2
 
 public format_united
 
-; inputs: op1/op2 = united quantity, iy = address of self
+; inputs: op1/op2 = united quantity
 ; outputs: token string in $D0033A, null terminated, de = end of string
 format_united:
 
-	lea	ix,iy
-	ld	bc,_metric_units-format_united - sizeof_unit
-	add	ix,bc
+	ld	ix,_metric_units
 
 	ld	bc,(num_metric_units+1) shl 8
 
@@ -211,7 +209,7 @@ format_united:
 
 ; ix = pointer to unit
 
-	push	ix,iy
+	push	ix
 	ld	iy,ti.flags
 	call	ti.PushOP1
 
@@ -228,12 +226,7 @@ format_united:
 	cp	a,48+3
 	jr	nc,.skip_prefix
 
-	pop	iy
-	push	iy
-
-	lea	hl,iy
-	ld	bc,si_prefixes-format_united
-	add	hl,bc
+	ld	hl,si_prefixes
 .prefix_loop:
 	cp	a,3
 	jr	c,.prefix_found
@@ -272,7 +265,7 @@ format_united:
 
 	pop	de ; ptr to current end of string
 	pop	bc ; c = SI prefix
-	pop	iy,hl
+	pop	hl
 
 	ld	a,' '
 	ld	(de),a
@@ -320,7 +313,6 @@ format_united:
 
 
 .not_named_metric:
-	push	iy
 	ld	iy,ti.flags
 	call	ti.PushOP1
 
@@ -341,9 +333,7 @@ format_united:
 
 	pop	de ; ptr to current end of string
 
-	pop	iy
-	ld	bc,base_units-format_united
-	add	iy,bc
+	ld	iy,base_units
 
 	ld	b,num_base_units
 	ld	hl,ti.OP2 + 2

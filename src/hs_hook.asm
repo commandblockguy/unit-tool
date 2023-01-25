@@ -26,10 +26,7 @@ ix_val:
 	;ld	(hl),2
 	;pop	hl
 
-	lea	iy,ix
-	ld	bc,format_united-ix_val
-	add	iy,bc
-	call	ti._indcall
+	call	format_united
 
 	ld	hl,$D0033A
 	ld	a,1

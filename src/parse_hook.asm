@@ -20,7 +20,6 @@ public _parse_hook
 
 _parse_hook:
 	db	$83
-ix_val:
 	set	0,(iy-flag_continue)
 	cp	a,3
 	jr	nz,.not_type3
@@ -39,11 +38,8 @@ ix_val:
 	cp	a,$f0
 	ret	nz
 
-	lea	iy,ix
-	ld	de,handleToString-ix_val
-	add	iy,de
 	push	hl
-	call	ti._indcall
+	call	handleToString
 	pop	hl
 	ld	b,$0f
 	xor	a,a
@@ -84,12 +80,8 @@ ix_val:
 	or	a,a
 	jp	nz,ti.ErrSyntax
 
-	lea	iy,ix
-	ld	de,parse_unit-ix_val
-	add	iy,de
-
 	push	hl,bc
-	call	ti._indcall
+	call	parse_unit
 	pop	bc,hl
 	ld	a,0
 
@@ -109,7 +101,7 @@ ix_val:
 .not_2byte:
 
 	push	af
-	call	ti._indcall
+	call	parse_unit
 	ld	iy,ti.flags
 	jp	c,ti.ErrSyntax
 	pop	af
@@ -203,25 +195,16 @@ ix_val:
 single_arg:
 	ld	a,b
 	cp	a,$A6
-	ld	de,handleToString - ix_val
-	jr	z,.call_handler
+	jp	z,handleToString
 	cp	a,$A7
-	ld	de,handleToString - ix_val
-	jr	z,.call_handler
+	jp	z,handleToString
 
 iterate op, Chs, Recip, Sqr, Sqrt, CubRt
 	cp	a,ti.t#op
-	ld	de,handle#op - ix_val
-	jr	z,.call_handler
+	jp	z,handle#op
 end iterate
 
 	jp	ti.ErrDataType
-
-.call_handler:
-	lea	iy,ix
-	add	iy,de
-	call	ti._indcall
-	ret
 
 multi_arg:
 	dec	l
@@ -243,9 +226,7 @@ iterate n, 1, 3
 	ld	iy,ti.flags
 	jp	ti.ErrDataType
 .op#n#_real:
-	lea	hl,ix
-	ld	de,.null_type - ix_val
-	add	hl,de
+	ld	hl,.null_type
 	ld	de,ti.OP#n + 11
 	call	ti.Mov9b
 	jr	.op#n#_valid
@@ -266,18 +247,11 @@ end iterate
 
 iterate op, Mul, Div, Add, Sub
 	cp	a,ti.t#op
-	ld	de,handle#op - ix_val
-	jr	z,.call_handler
+	jp	z,handle#op
 end iterate
 
 	ld	iy,ti.flags
 	jp	ti.ErrDataType
-
-.call_handler:
-	lea	iy,ix
-	add	iy,de
-	call	ti._indcall
-	ret
 
 .null_type:
 	db	$0c,$80,$f0,$f0,$f0,$f0,$f0,$f0,$f0
@@ -404,8 +378,7 @@ handleSqr:
 	ld	(hl),a
 	inc	hl
 	djnz	.loop
-hookTailTramp:
-	jr	hookTail
+	jp	hookTail
 
 handleSqrt:
 	ld	iy,ti.flags
@@ -430,15 +403,13 @@ handleSqrt:
 	ld	(hl),a
 	inc	hl
 	djnz	.loop
-	jr	hookTailTramp
+	jp	hookTail
 
 handleCubRt:
 	jp	ti.ErrDataType
 
 handleToString:
-	ld	bc,format_united-handleToString
-	add	iy,bc
-	call	ti._indcall
+	call	format_united
 	ex	de,hl
 	ld	de,$D0033A
 	or	a,a
@@ -466,17 +437,14 @@ handleToString:
 
 	call	ti.OP4ToOP1
 
-	jr	hookTailTramp
+	jp	hookTail
 
 ; hl = pointer to first token
 ; c = size
-; iy = ptr to self
 ; destroys a,bc,de,hl,OP3
 ; returns ix = unit, or c if not found
 parse_unit:
-	lea	ix,iy
-	ld	de,_units-sizeof_unit-parse_unit
-	add	ix,de
+	ld	ix,_units-sizeof_unit
 
 	ex	de,hl
 	call	ti.ZeroOP3
